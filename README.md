@@ -15,5 +15,5 @@ Tasks:
 - Profit!
 
 Updates:
-2013-05-30 : Current in the prototyping stages.
+- 2013-05-30 : Current in the prototyping stages.
 
