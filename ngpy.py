@@ -36,6 +36,7 @@ class Spice():
         return 0
 
     def append_command(self,operation,output):
+        ''' Used to create the correct command to send to ngspice '''
         nettext = []
         with open(self.netlist,'r') as f:
             for line in f.readlines():
