@@ -6,7 +6,7 @@ The program is specifically meant to optimize the feedback network of the error 
 
 Tasks:
 - Interface with ngspice (Completed: 2013-05-30)
-- Verify operation of various circuits
+- Verify operation of various circuits (Completed: 2013-05-30)
 - Create GA to create basic circuits (voltage divider, etc)
 - Verify creation of more complex analog blocks (filters, resonant circuits)
 - Begin optimizing algorithm for converter feedback loop.
