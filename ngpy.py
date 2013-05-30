@@ -102,5 +102,8 @@ class Spice():
 
 if __name__ == '__main__':
     sp = Spice()
-    sp.sim('bin/voltage_divide.sp', 'dc VDD 0 10 0.1', 'print V(vout)')
+    #sp.sim('bin/nets/voltage_divide.sp', 'dc VDD 0 10 0.1', 'print V(vout)')
+    #sp.sim('bin/nets/low_pass.sp', 'ac DEC 100 1 1G', 'print VDB(vout) VP(vout)')
+    #sp.sim('bin/nets/low_pass.sp', 'pz vin 0 vout 0 VOL PZ', 'print all')
+    #sp.sim('bin/nets/inverter.sp', 'dc VIN 0 5 0.1', 'print V(out)')
     sp.end()
