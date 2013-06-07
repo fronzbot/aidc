@@ -28,7 +28,7 @@ class Spice():
         self.net_string = 'source out/netlists/'+self.netname+'_'+str(self.iter)+'.sp\n'
 
         self.command = bytes(self.net_string,'UTF-8')
-        self.ngspice = Popen(['spice/bin/ngspice.exe','-n','-p'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.ngspice = Popen(['spice/bin/ngspice.exe','-n', '-p'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.outdump = self.ngspice.communicate(self.command)[0]
         self.dump(self.outdump)
 
@@ -58,7 +58,7 @@ class Spice():
             f.write('\n*** SIMULATION Commands ***\n')
             f.write('.control\n')
             f.write(operation+'\n')
-            f.write(output+'>> '+self.outfile+'\n')
+            f.write(output+'> '+self.outfile+'\n')
             f.write('.endc\n')
             f.write('\n.END\n')
 
@@ -103,8 +103,10 @@ class Spice():
 
 if __name__ == '__main__':
     sp = Spice()
-    sp.sim('nets/voltage_divide.sp', 'dc VDD 0 10 0.1', 'print V(vout)')
-    #sp.sim('nets/low_pass.sp', 'ac DEC 100 1 1G', 'print VDB(vout) VP(vout)')
-    #sp.sim('nets/low_pass.sp', 'pz vin 0 vout 0 VOL PZ', 'print all')
-    #sp.sim('nets/inverter.sp', 'dc VIN 0 5 0.1', 'print V(out)')
+    #sp.sim('nets/voltage_divide.sp', 'dc VDD 0 10 0.1', 'print V(vout)')
+    #sp.sim('nets/low_pass.sp', 'ac DEC 100 1 1G', 'VDB(vout) VP(vout)')
+    #sp.sim('nets/low_pass.sp', 'pz vin 0 vout 0 VOL PZ', 'all')
+    #sp.sim('nets/inverter.sp', 'dc VIN 0 5 0.1', 'V(out)')
+    sp.sim('nets/gate_chain.sp', 'tran 1n 4u', 'print V(OUT)')
     sp.end()
+
