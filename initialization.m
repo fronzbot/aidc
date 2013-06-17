@@ -102,7 +102,7 @@ Kvals(1)  = gm*Ro*RB/(RB+RT);
 % parent (that is, the first row of each array).
 for i = 2:children
     % First work with zeros of transfer function
-    mask = fix(rand(1,zeroCount));
+    mask = round(randi(2, [1 zeroCount])-1);
     newCoeffs = tfN(1,:).*mask;
     for j = 1:zeroCount
         if newCoeffs(j) == 0
@@ -112,7 +112,7 @@ for i = 2:children
     tfN(i,:) = newCoeffs;
     
     % Next work with poles of transfer function
-    mask = fix(rand(1,poleCount));
+    mask = round(randi(2, [1 poleCount])-1);
     newCoeffs = tfD(1,:).*mask;
     for j = 1:poleCount
         if newCoeffs(j) == 0
@@ -136,8 +136,8 @@ fits = fitness(tfN, tfD, RTvals, RBvals, Kvals);
 parent1 = indices(1);
 parent2 = indices(2);
 
-zerosToPass = [tfN(parent1);    tfN(parent2)];
-polesToPass = [tfD(parent1);    tfD(parent2)];
+zerosToPass = [tfN(parent1,:);    tfN(parent2,:)];
+polesToPass = [tfD(parent1,:);    tfD(parent2,:)];
 RoToPass    = [Rovals(parent1); Rovals(parent2)];
 RTToPass    = [RTvals(parent1); RTvals(parent2)];
 RBToPass    = [RBvals(parent1); RBvals(parent2)];

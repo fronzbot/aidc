@@ -41,6 +41,7 @@ Pm  = zeros(1,total);
 for i=1:total
     % Construct the system
     sys = boost*Gain(i)*tf(num(i,:), den(i,:))*1/2.5; % 2.5 is peak value of ramp input to PWM generator for VMC
+    
     % Get DC gain, bandwidth, and phase margin
     G(i)  = abs(20*log10(dcgain(sys)));
     BW(i) = bandwidth(sys);
