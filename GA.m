@@ -12,38 +12,44 @@ function [allZeros, allPoles, allRo, allRT, allRB] = GA( parentZeros, parentPole
 % Create arrays for each parameter based on number of defined children
 zeroCount = length(parentZeros(1,:));
 poleCount = length(parentPoles(1,:));
-
-% CURRENTLY NOT WORKING
-% Determine if number of poles and zeros should mutate this generation
-% zeroMod = round(normrnd(0,0.5));
-% poleMod = round(normrnd(0,0.5));
-% 
-% newZeroCount = zeroCount + zeroMod;
-% newPoleCount = poleCount + poleMod;
-% 
-% if newPoleCount > 3
-%     newPoleCount = 3;
-% end
-% if newPoleCount < 1
-%     newPoleCount = 1;
-% end
-% 
-% if newZeroCount > newPoleCount
-%     newZeroCount = newPoleCount;
-% end
-% if newZeroCount < 1
-%     newZeroCount = 1;
-% end
-% 
-% zeroCount = newZeroCount;
-% poleCount = newPoleCount;
-
-allZeros  = zeros(children, zeroCount);
-allPoles  = zeros(children, poleCount);
 allRT     = zeros(children, 1);
 allRB     = zeros(children, 1);
 allRo     = zeros(children, 1);
 allK      = zeros(children, 1);
+
+% Check if number of poles and zeros should mutate
+mutatePoles = randi(2)-1;
+mutateZeros = randi(2)-1;
+
+if mutatePoles == 1
+    poleCount = randi(3,1)+1;
+end
+if mutateZeros == 1
+    zeroCount = randi(3,1);
+end
+
+if poleCount < zeroCount
+    poleCount = zeroCount;
+end
+
+allZeros  = zeros(children, zeroCount);
+allPoles  = zeros(children, poleCount);
+
+if zeroCount > length(parentZeros(1,:))
+    parentZeros(1,zeroCount) = 0;
+    parentZeros(2,zeroCount) = 0;
+elseif zeroCount < length(parentZeros(1,:))
+    parentZeros = parentZeros(:,1:zeroCount);
+end
+
+if poleCount > length(parentPoles(1,:))
+   parentPoles(1,poleCount) = 0;
+   parentPoles(2,poleCount) = 0;
+elseif poleCount < length(parentPoles(1,:))
+    parentPoles = parentPoles(:,1:poleCount);
+end
+
+
 
 % Determine which genes are inhertied from which parents.
 % Any gene that does not get transmitted to a child (ie. the 
@@ -54,7 +60,9 @@ for i = 1:children
     % First work with zeros of transfer function
     mask1 = fix(rand(1,zeroCount));
     mask2 = fix(rand(1,zeroCount));
-    newCoeffs = (parentZeros(1,:).*mask1+parentZeros(2,:).*mask2)/2;
+
+    newCoeffs = (parentZeros(1,1:zeroCount).*mask1+parentZeros(2,1:zeroCount).*mask2)/2;
+    
     for j = 1:zeroCount
         if newCoeffs(j) == 0
             mean  = parentZeros(randi(2,1),j);
@@ -63,26 +71,14 @@ for i = 1:children
         end
     end
     allZeros(i,:) = newCoeffs;
-    
-    % CURRENTLY NOT WORKING
-%     % If zeros have been mutated (added or subtracted), either truncate
-%     % new coefficient array or add new random value
-%     if length(allZeros(i,:)) < length(newCoeffs)
-%         diff = length(newCoeffs) - length(allZeros(i,:));
-%         allZeros(i,:) = newCoeffs(diff+1:end);
-%     elseif length(allZeros(i,:)) > length(newCoeffs)
-%         diff = length(allZeros(i,:)) - length(newCoeffs);
-%         for m = 1:diff
-%             allZeros(i,m) = 1/(2*pi*randi(500e3,1));
-%         end
-%     else
-%         allZeros(i,:) = newCoeffs;
-%     end
+
     
     % Next work with poles of transfer function
     mask1 = fix(rand(1,poleCount));
     mask2 = fix(rand(1,poleCount));
-    newCoeffs = (parentPoles(1,:).*mask1+parentPoles(2,:).*mask2)/2;
+    
+    newCoeffs = (parentPoles(1,1:poleCount).*mask1+parentPoles(2,1:poleCount).*mask2)/2;
+    
     for j = 1:poleCount
         if newCoeffs(j) == 0
             mean  = parentPoles(randi(2,1),j);
@@ -90,21 +86,7 @@ for i = 1:children
             newCoeffs(j) = normrnd(mean, sigma);
         end
     end
-    allPoles(i,:) = newCoeffs;
-    % CURRENTLY NOT WORKING
-%     % If poles have been mutated (added or subtracted), either truncate
-%     % new coefficient array or add new random value
-%     if length(allPoles(i,:)) < length(newCoeffs)
-%         diff = length(newCoeffs) - length(allPoles(i,:));
-%         allPoles(i,:) = newCoeffs(diff+1:end);
-%     elseif length(allPoles(i,:)) > length(newCoeffs)
-%         diff = length(allPoles(i,:)) - length(newCoeffs);
-%         for m = 1:diff
-%             allPoles(i,m) = 1/(2*pi*randi(500e3,1));
-%         end
-%     else
-%         allPoles(i,:) = newCoeffs;
-%     end
+    allPoles(i,:) = newCoeffs.';
     
     % Mutate RT?
     mask1 = fix(randi(2,1)-1);
