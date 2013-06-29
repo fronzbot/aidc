@@ -8,7 +8,7 @@ function [bestQueen] = GA(queen, drone, Vout, Vref)
 % creates new bees by mating them with drones.  The new virgin
 % queens are then evaluated and the best is selected as the new
 % queen bee.
-genes = {'Gpc', 'Gzc', 'Gpn', 'Gpn', 'Gro', 'Grt'};
+genes = {'Gpc', 'Gzc', 'Gpn', 'Gzn', 'Gro', 'Grt'};
 for i = 1:length(drone)
     % Randomly pick the number of crossover genes
     geneCount = length(genes);
