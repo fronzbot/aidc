@@ -77,7 +77,7 @@ for c = 1:children
     if gm > 0
         gm = -1*gm;
     end
-    
+    drone(c).age = 1;
     drone(c).gm  = gm;
     drone(c).Vo  = Vout;
     drone(c).Grt = randi(10e6, 1);

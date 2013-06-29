@@ -24,17 +24,17 @@ for i = 1:length(drone)
         % If the gene is in the crossover pool
         if ismember(j,geneIndex)
             % Check if gene undergoes mutation
-            if rand(1) < 0.01
+            if rand(1) <= 0.02
                 newQueen(1).(genes{j}) = mutateGene(drone(i), genes{j});
-                newQueen(2).(genes{j}) = queen.(genes{j});
+                newQueen(2).(genes{j}) = mutateGene(queen, genes{j});
             else
                 newQueen(1).(genes{j}) = drone(i).(genes{j});
                 newQueen(2).(genes{j}) = queen.(genes{j});
             end
         else
             % Check if gene undergoes mutation
-            if rand(1) < 0.01
-                newQueen(1).(genes{j}) = queen.(genes{j});
+            if rand(1) <= 0.02
+                newQueen(1).(genes{j}) = mutateGene(queen, genes{j});
                 newQueen(2).(genes{j}) = mutateGene(drone(i), genes{j});
             else
                 newQueen(1).(genes{j}) = queen.(genes{j});
@@ -52,7 +52,7 @@ for i = 1:length(drone)
         for k = 1:2
             if strcmp(genes{j}, 'Gzn')
                 if newQueen(k).Gzn > newQueen(k).Gzp
-                    newQueen(k).Gzn = newQueen(k).Gzp
+                    newQueen(k).Gzn = newQueen(k).Gzp;
                 end
                 while length(newQueen(k).Gzc) < newQueen(k).Gzn
                     newQueen(k).Gzc(end+1) = 1./(2*pi*randi(500e3,1));
@@ -72,12 +72,14 @@ for i = 1:length(drone)
             
         end
     end % End Gene Count For Loop
-    
+    newQueen(1).age = 1;
+    newQueen(2).age = 1;
     virginQueen(i) = queenCompete(newQueen(1), newQueen(2));
     
 end % End Drone For Loop
 
 % Have all queens compete for nest dominance
+virginQueen(i).age = 1;
 bestQueen = virginQueen(i);
 for i = 2:length(virginQueen)
     bestQueen = queenCompete(bestQueen, virginQueen(i));

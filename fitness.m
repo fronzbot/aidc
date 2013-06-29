@@ -15,7 +15,7 @@ controller = bee.gm*bee.Gro*bee.Grb/(bee.Grt + bee.Grb)*tf(bee.Gzc, bee.Gpc);
 system = boost*controller;
 
 % Weighted coefficients for parameters
-W = [0.05, 0.5, 0.2, 0.25];
+W = [1.05, 1.6, 1.3, 1.05];
 
 
 Pfb = bee.Vo^2/(bee.Grb+bee.Grt);    % Power
@@ -28,7 +28,7 @@ trise = sysTransient.RiseTime;       % Rise Time
 
 % Make sure all variables are valid
 if isnan(Pfb) || abs(Pfb) == Inf
-    Pfb = 0;
+    Pfb = 1;
 end
 if isnan(Pm) || abs(Pm) == Inf
     Pm = 0;
@@ -37,14 +37,14 @@ if isnan(Gol) || abs(Gol) == Inf
     Gol = 0;
 end
 if isnan(trise) || abs(trise) == Inf
-    trise = 0;
+    trise = 1;
 end
 
 % Generate fitness criteria for each variable
-f_Pfb = -2e6*Pfb + 2000;
+f_Pfb = -250*log10(Pfb) - 750;
 f_Pm  = 25*Pm - 250;
 f_Gol = 29*Gol - 285;
-f_tr  = -40e3*trise + 2000;
+f_tr  = -300*log10(trise)-900;
 
 % Create penalties if outside range
 if outsideRange(Pfb, 10e-9, 1e-3) == 1
@@ -67,7 +67,7 @@ if outsideRange(Gol, 10, 80) == 1
     if Gol > 80
         f_Gol = -35*Gol + 2900;
     else
-        f_Gol = -100*Gol - 10;
+        f_Gol = -100*abs(Gol) - 10;
     end
 end
 
@@ -79,7 +79,20 @@ if outsideRange(trise, 10e-9, 10e-3) == 1
     end
 end
 
-fitValue = W(1)*f_Pfb + W(2)*f_Pm + W(3)*f_Gol + W(4)*f_tr;
+fitValue = (W(1)*f_Pfb+W(2)*f_Pm+W(3)*f_Gol+W(4)*f_tr);
+
+if (f_Pfb < 0 || f_Pm < 0 || f_Gol < 0 || f_tr < 0) && fitValue > 0
+    fitValue = -bee.age*fitValue;
+elseif fitValue < 0
+    fitValue = bee.age*fitValue;
+else
+    fitValue = 1/bee.age*fitValue;
+end
+    
+% fprintf('%.3g\t\t%.3g\t\t%.3g\t\t%.3g\n', W(1)*f_Pfb, ...
+%                                   W(2)*f_Pm,  ...
+%                                   W(3)*f_Gol, ...
+%                                   W(4)*f_tr)
 end
 
 
