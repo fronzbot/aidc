@@ -51,8 +51,8 @@ for i = 1:length(drone)
         % Update coefficients if Gzn or Gpn were modified
         for k = 1:2
             if strcmp(genes{j}, 'Gzn')
-                if newQueen(k).Gzn > newQueen(k).Gzp
-                    newQueen(k).Gzn = newQueen(k).Gzp;
+                if newQueen(k).Gzn > newQueen(k).Gpn
+                    newQueen(k).Gzn = newQueen(k).Gpn;
                 end
                 while length(newQueen(k).Gzc) < newQueen(k).Gzn
                     newQueen(k).Gzc(end+1) = 1./(2*pi*randi(500e3,1));
