@@ -1,124 +1,87 @@
 % Kevin Fronczak
 % aidc
 % GA.m
-% 2013.06.16
+% 2013.06.28
 
-function [allZeros, allPoles, allRo, allRT, allRB] = GA( parentZeros, parentPoles, parentRo, parentRT, parentRB, gm, children )
-%GA is the genetic algorithm that creates new genes from best parents from
-% last generation.  This function first randomly selects the genes to
-% crossover via a bit mask, breads a given number of children, and then
-% returns those children for external evaluation.
-
-% Create arrays for each parameter based on number of defined children
-zeroCount = length(parentZeros(1,:));
-poleCount = length(parentPoles(1,:));
-allRT     = zeros(children, 1);
-allRB     = zeros(children, 1);
-allRo     = zeros(children, 1);
-allK      = zeros(children, 1);
-
-% Check if number of poles and zeros should mutate
-mutatePoles = randi(2)-1;
-mutateZeros = randi(2)-1;
-
-if mutatePoles == 1
-    poleCount = randi(3,1)+1;
-end
-if mutateZeros == 1
-    zeroCount = randi(3,1);
-end
-
-if poleCount < zeroCount
-    poleCount = zeroCount;
-end
-
-allZeros  = zeros(children, zeroCount);
-allPoles  = zeros(children, poleCount);
-
-if zeroCount > length(parentZeros(1,:))
-    parentZeros(1,zeroCount) = 0;
-    parentZeros(2,zeroCount) = 0;
-elseif zeroCount < length(parentZeros(1,:))
-    parentZeros = parentZeros(:,1:zeroCount);
-end
-
-if poleCount > length(parentPoles(1,:))
-   parentPoles(1,poleCount) = 0;
-   parentPoles(2,poleCount) = 0;
-elseif poleCount < length(parentPoles(1,:))
-    parentPoles = parentPoles(:,1:poleCount);
-end
-
-
-
-% Determine which genes are inhertied from which parents.
-% Any gene that does not get transmitted to a child (ie. the 
-% value is equal to zero) gets randomly selected via a normal
-% distribution with a random parent chosen as the mean.  Any 
-% gene that gets inherited from each parent is taken as the average. 
-for i = 1:children
-    % First work with zeros of transfer function
-    mask1 = fix(rand(1,zeroCount));
-    mask2 = fix(rand(1,zeroCount));
-
-    newCoeffs = (parentZeros(1,1:zeroCount).*mask1+parentZeros(2,1:zeroCount).*mask2)/2;
+function [bestQueen] = GA(queen, drone, Vout, Vref)
+%GA is the genetic algorithm that finds the queen bee and
+% creates new bees by mating them with drones.  The new virgin
+% queens are then evaluated and the best is selected as the new
+% queen bee.
+genes = {'Gpc', 'Gzc', 'Gpn', 'Gpn', 'Gro', 'Grt'};
+for i = 1:length(drone)
+    % Randomly pick the number of crossover genes
+    geneCount = length(genes);
+    geneIndex = randsample(geneCount,randi(geneCount));
     
-    for j = 1:zeroCount
-        if newCoeffs(j) == 0
-            mean  = parentZeros(randi(2,1),j);
-            sigma = mean/4;
-            newCoeffs(j) = normrnd(mean, sigma);
+    newQueen(1).gm = drone(i).gm;
+    newQueen(2).gm = drone(i).gm;
+    newQueen(1).Vo = drone(i).Vo;
+    newQueen(2).Vo = drone(i).Vo;
+    
+    % Begin crossover and mutation
+    for j = 1:geneCount
+        % If the gene is in the crossover pool
+        if ismember(j,geneIndex)
+            % Check if gene undergoes mutation
+            if rand(1) < 0.01
+                newQueen(1).(genes{j}) = mutateGene(drone(i), genes{j});
+                newQueen(2).(genes{j}) = queen.(genes{j});
+            else
+                newQueen(1).(genes{j}) = drone(i).(genes{j});
+                newQueen(2).(genes{j}) = queen.(genes{j});
+            end
+        else
+            % Check if gene undergoes mutation
+            if rand(1) < 0.01
+                newQueen(1).(genes{j}) = queen.(genes{j});
+                newQueen(2).(genes{j}) = mutateGene(drone(i), genes{j});
+            else
+                newQueen(1).(genes{j}) = queen.(genes{j});
+                newQueen(2).(genes{j}) = drone(i).(genes{j});
+            end
         end
-    end
-    allZeros(i,:) = newCoeffs;
-
-    
-    % Next work with poles of transfer function
-    mask1 = fix(rand(1,poleCount));
-    mask2 = fix(rand(1,poleCount));
-    
-    newCoeffs = (parentPoles(1,1:poleCount).*mask1+parentPoles(2,1:poleCount).*mask2)/2;
-    
-    for j = 1:poleCount
-        if newCoeffs(j) == 0
-            mean  = parentPoles(randi(2,1),j);
-            sigma = mean/4;
-            newCoeffs(j) = normrnd(mean, sigma);
+        
+        % Update Grb if Grt was modified
+        if strcmp(genes{j}, 'Grt')
+            newQueen(1).Grb = Vref*newQueen(1).Grt/(Vout-Vref);
+            newQueen(2).Grb = Vref*newQueen(2).Grt/(Vout-Vref);
         end
-    end
-    allPoles(i,:) = newCoeffs.';
+        
+        % Update coefficients if Gzn or Gpn were modified
+        for k = 1:2
+            if strcmp(genes{j}, 'Gzn')
+                if newQueen(k).Gzn > newQueen(k).Gzp
+                    newQueen(k).Gzn = newQueen(k).Gzp
+                end
+                while length(newQueen(k).Gzc) < newQueen(k).Gzn
+                    newQueen(k).Gzc(end+1) = 1./(2*pi*randi(500e3,1));
+                end
+                while length(newQueen(k).Gzc) > newQueen(k).Gzn 
+                    newQueen(k).Gzc = newQueen(k).Gzc(1:end-1);
+                end
+            end
+            if strcmp(genes{j}, 'Gpn')
+                while length(newQueen(k).Gpc) < newQueen(k).Gpn
+                    newQueen(k).Gpc(end+1) = 1./(2*pi*randi(500e3,1));
+                end
+                while length(newQueen(k).Gpc) > newQueen(k).Gpn
+                    newQueen(k).Gpc = newQueen(k).Gpc(1:end-1);
+                end
+            end
+            
+        end
+    end % End Gene Count For Loop
     
-    % Mutate RT?
-    mask1 = fix(randi(2,1)-1);
-    mask2 = fix(randi(2,1)-1);
-    allRT(i) = (parentRT(1,:).*mask1+parentRT(2,:).*mask2)/2;
-    if allRT(i) == 0
-        mean  = parentRT(randi(2,1));
-        sigma = mean/4;
-        allRT(i) = normrnd(mean,sigma);
-    end
+    virginQueen(i) = queenCompete(newQueen(1), newQueen(2));
     
-    % Mutate RB?
-    mask1 = fix(randi(2,1)-1);
-    mask2 = fix(randi(2,1)-1);
-    allRB(i) = (parentRB(1,:).*mask1+parentRB(2,:).*mask2)/2;
-    if allRB(i) == 0
-        mean  = parentRB(randi(2,1));
-        sigma = mean/4;
-        allRB(i) = normrnd(mean,sigma);
-    end
-    
-    % Mutate Ro?
-    mask1 = fix(randi(2,1)-1);
-    mask2 = fix(randi(2,1)-1);
-    allRo(i) = (parentRo(1,:).*mask1+parentRo(2,:).*mask2)/2;
-    if allRo(i) == 0
-        mean  = parentRo(randi(2,1));
-        sigma = mean/4;
-        allRo(i) = normrnd(mean,sigma);
-    end
-    allK(i)  = gm*allRo(i)*allRB(i)/(allRT(i)+allRB(i));
-end % End child creation
+end % End Drone For Loop
+
+% Have all queens compete for nest dominance
+bestQueen = virginQueen(i);
+for i = 2:length(virginQueen)
+    bestQueen = queenCompete(bestQueen, virginQueen(i));
+end
 
 end
 

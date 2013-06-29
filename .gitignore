@@ -1,3 +1,5 @@
 *.txt
 *.asv
 *.sh
+*.csv
+images/
