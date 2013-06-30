@@ -11,28 +11,28 @@ boost = boostTF();
 controller = bee.gm*bee.Gro*bee.Grb/(bee.Grt + bee.Grb)*tf(bee.Gzc, bee.Gpc);
 system = boost*controller;
 
-Pfb = bee.Vo^2/(bee.Grb+bee.Grt);    % Power
-[gain, phase] = bode(system);  
-magdbsq = squeeze(20*log10(gain(1,1,:)));
-phasesq = squeeze(phase(1,1,:));
-[Gol, Pm] = findPM(magdbsq, phasesq);       % Phase Margin and DC Open-Loop Gain
-sysTransient = stepinfo(system);
-trise = sysTransient.RiseTime;   % Rise Time
+stepvals = stepinfo(system);
 
-if isnan(Pfb)
-    Pfb = 0;
+tr = stepvals.RiseTime;
+ts = stepvals.SettlingTime;
+os = stepvals.Overshoot;
+
+[~, pm] = margin(system);
+gain    = dcgain(system);
+
+fit = fitness(bee);
+
+if isnan(os)
+    os = Inf;
 end
-if isnan(Pm)
-    Pm = 0;
+if isnan(os)
+    tr = Inf;
 end
-if isnan(Gol)
-    Gol = 0;
-end
-if isnan(trise)
-    trise = 0;
+if isnan(os)
+    ts = Inf;
 end
 
-m = [iter Pfb Pm Gol trise];
+m = [iter fit tr ts os pm gain];
 dlmwrite('data.csv', m, 'delimiter', ',', '-append');
 
 end

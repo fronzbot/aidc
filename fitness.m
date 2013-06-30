@@ -15,84 +15,57 @@ controller = bee.gm*bee.Gro*bee.Grb/(bee.Grt + bee.Grb)*tf(bee.Gzc, bee.Gpc);
 system = boost*controller;
 
 % Weighted coefficients for parameters
-W = [1.05, 1.6, 1.3, 1.05];
+% [tr, ts, os, pm, gain]
+W = [1e-4, 1e-3, 100, 30, 1];
 
+% Get step information and freqeuency response information
+stepvals = stepinfo(system);
 
-Pfb = bee.Vo^2/(bee.Grb+bee.Grt);    % Power
-[gain, phase] = bode(system);  
-magdbsq = squeeze(20*log10(gain(1,1,:)));
-phasesq = squeeze(phase(1,1,:));
-[Gol, Pm] = findPM(magdbsq, phasesq);       % Phase Margin and DC Open-Loop Gain
-sysTransient = stepinfo(system);
-trise = sysTransient.RiseTime;       % Rise Time
+tr = stepvals.RiseTime;
+ts = stepvals.SettlingTime;
+os = stepvals.Overshoot;
 
-% Make sure all variables are valid
-if isnan(Pfb) || abs(Pfb) == Inf
-    Pfb = 1;
+[~, pm] = margin(system);
+gain    = dcgain(system);
+
+% Prevent any "0" or NaN values
+if os == 0 || isnan(os)
+    os = Inf;
 end
-if isnan(Pm) || abs(Pm) == Inf
-    Pm = 0;
+if tr == 0 || isnan(os)
+    tr = Inf;
 end
-if isnan(Gol) || abs(Gol) == Inf
-    Gol = 0;
+if ts == 0 || isnan(os)
+    ts = Inf;
 end
-if isnan(trise) || abs(trise) == Inf
-    trise = 1;
-end
-
-% Generate fitness criteria for each variable
-f_Pfb = -250*log10(Pfb) - 750;
-f_Pm  = 25*Pm - 250;
-f_Gol = 29*Gol - 285;
-f_tr  = -300*log10(trise)-900;
-
-% Create penalties if outside range
-if outsideRange(Pfb, 10e-9, 1e-3) == 1
-    if Pfb > 1e-3
-        f_Pfb = -2000*Pfb - 8;
-    else
-        f_Pfb = 2e11*Pfb - 2000;
-    end
+if pm == Inf || isnan(pm)
+    pm = -180;
 end
 
-if outsideRange(Pm, 10, 90) == 1
-    if Pm > 90
-        f_Pm = -33*Pm + 4000;
-    else
-        f_Pm = 18*Pm - 200;
-    end
+
+% Calculate penalties
+penalty = 0;
+if outsideRange(tr, 10e-9, 100e-6)
+    penalty = penalty + 2*W(1)/abs(tr);
+end
+if outsideRange(ts, 10e-9, 10e-3)
+    penalty = penalty + 2*W(2)/abs(ts);
+end
+if outsideRange(os, 0, 60)
+    penalty = penalty + 2*W(3)/abs(os);
+end
+if outsideRange(pm, 45, 80)
+    penalty = penalty + 2*W(4)*abs(pm);
+end
+if outsideRange(gain, 100, 10e3)
+    penalty = penalty + 2*W(5)*abs(gain);
 end
 
-if outsideRange(Gol, 10, 80) == 1
-    if Gol > 80
-        f_Gol = -35*Gol + 2900;
-    else
-        f_Gol = -100*abs(Gol) - 10;
-    end
-end
 
-if outsideRange(trise, 10e-9, 10e-3) == 1
-    if trise > 10e-3
-       f_tr = -2000*trise + 10; 
-    else
-       f_tr = 2e11*trise - 2000;
-    end
+fitValue = ((W(1)*1/tr) + (W(2)*1/ts) + (W(3)*1/os) + (W(4)*pm) + (W(5)*gain)) - penalty;
+if isnan(fitValue)
+    fitValue = -1e5;
 end
-
-fitValue = (W(1)*f_Pfb+W(2)*f_Pm+W(3)*f_Gol+W(4)*f_tr);
-
-if (f_Pfb < 0 || f_Pm < 0 || f_Gol < 0 || f_tr < 0) && fitValue > 0
-    fitValue = -bee.age*fitValue;
-elseif fitValue < 0
-    fitValue = bee.age*fitValue;
-else
-    fitValue = 1/bee.age*fitValue;
-end
-    
-% fprintf('%.3g\t\t%.3g\t\t%.3g\t\t%.3g\n', W(1)*f_Pfb, ...
-%                                   W(2)*f_Pm,  ...
-%                                   W(3)*f_Gol, ...
-%                                   W(4)*f_tr)
 end
 
 

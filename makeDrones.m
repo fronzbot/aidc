@@ -59,24 +59,21 @@ for c = 1:children
     drone(c).Gpc = zeros(1,drone(c).Gpn);
     for i = 1:drone(c).Gzn
         if i ~= drone(c).Gzn
-            drone(c).Gzc(i) = 1./(2*pi*randi(500e3,1));
+            randFreq = (randi(9)+rand())*10^(randi(6));
+            drone(c).Gzc(i) = 1./(2*pi*randFreq);
         else
             drone(c).Gzc(i) = 1;
         end
     end
     for i = 1:drone(c).Gpn
         if i ~= drone(c).Gpn
-            drone(c).Gpc(i) = 1./(2*pi*randi(500e3,1));
+            randFreq = (randi(9)+rand())*10^(randi(6));
+            drone(c).Gpc(i) = 1./(2*pi*randFreq);
         else
             drone(c).Gpc(i) = 1;
         end
     end
 
-    % Randomly generate gain value from gm, RT, and RB
-    % Verify that gm is a negative quantity (if not, make it negative)
-    if gm > 0
-        gm = -1*gm;
-    end
     drone(c).age = 1;
     drone(c).gm  = gm;
     drone(c).Vo  = Vout;
