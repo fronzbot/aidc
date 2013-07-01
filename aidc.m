@@ -63,7 +63,7 @@ for i = 1:iterLimit
         sys = K*tf(nestQueen.Gzc, nestQueen.Gpc);
         [~, pm] = margin(sys);
         gain    = dcgain(sys);
-        figure
+        figure(1)
         step(sys*boostTF());
         title(sprintf('Gen %d, Fit %.3g, Gain = %.3g, \\phi_M = %.3g', i, fitness(nestQueen), gain, pm));
         h = gcf;
