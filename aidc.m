@@ -10,8 +10,8 @@ warning('off', 'Control:analysis:MarginUnstable')
 % switched DC-DC converter.
 
 % Set maximum number of allowed iterations and number of children
-iterLimit  = 20;
-droneCount = 20;
+iterLimit  = 50;
+droneCount = 10;
 
 % Some converter characteristics
 gm   = 0.1;
@@ -61,10 +61,10 @@ for i = 1:iterLimit
     if mod(i,5) == 0 || i == 1
         K = nestQueen.gm * nestQueen.Gro * nestQueen.Grb/(nestQueen.Grt+nestQueen.Grb);
         sys = K*tf(nestQueen.Gzc, nestQueen.Gpc);
-        [~, pm] = margin(sys);
+        [Gmarg, pm] = margin(boostTF()*sys);
         gain    = dcgain(sys);
         figure(1)
-        step(sys*boostTF());
+        step(feedback(sys*boostTF(),1));
         title(sprintf('Gen %d, Fit %.3g, Gain = %.3g, \\phi_M = %.3g', i, fitness(nestQueen), gain, pm));
         h = gcf;
         set(findall(h,'type','text'),'fontName','Book Antiqua','fontSize',8, 'fontWeight', 'bold')

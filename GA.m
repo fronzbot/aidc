@@ -21,25 +21,20 @@ for i = 1:length(drone)
     
     % Begin crossover and mutation
     for j = 1:geneCount
-        % If the gene is in the crossover pool
+        % Perform gene crossovers
         if ismember(j,geneIndex)
-            % Check if gene undergoes mutation
-            if rand(1) <= 0.02
-                newQueen(1).(genes{j}) = mutateGene(drone(i), genes{j});
-                newQueen(2).(genes{j}) = mutateGene(queen, genes{j});
-            else
-                newQueen(1).(genes{j}) = drone(i).(genes{j});
-                newQueen(2).(genes{j}) = queen.(genes{j});
-            end
+            newQueen(1).(genes{j}) = drone(i).(genes{j});
+            newQueen(2).(genes{j}) = queen.(genes{j});
+            
         else
-            % Check if gene undergoes mutation
-            if rand(1) <= 0.02
-                newQueen(1).(genes{j}) = mutateGene(queen, genes{j});
-                newQueen(2).(genes{j}) = mutateGene(drone(i), genes{j});
-            else
-                newQueen(1).(genes{j}) = queen.(genes{j});
-                newQueen(2).(genes{j}) = drone(i).(genes{j});
-            end
+            newQueen(1).(genes{j}) = queen.(genes{j});
+            newQueen(2).(genes{j}) = drone(i).(genes{j});
+        end
+        
+        % Check if any genes mutate
+        if rand(1) <= queen.age/20
+            newQueen(1).(genes{j}) = mutateGene(queen, genes{j});
+            newQueen(2).(genes{j}) = mutateGene(queen, genes{j});
         end
         
         % Update Grb if Grt was modified

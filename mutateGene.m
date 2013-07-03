@@ -23,9 +23,6 @@ function [ newGene ] = mutateGene(bee, origGene)
       
     elseif strcmp(origGene, 'Gzn')
         newGene = randi(3,1);
-        if newGene > bee.Gpn
-            newGene = bee.Gpn;
-        end
         
     elseif strcmp(origGene, 'Gro')
         newGene = randi(50e3, 1);
