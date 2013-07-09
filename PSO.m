@@ -2,12 +2,8 @@
 % aidc
 % PSO.m
 % 2013.07.08
-close all
-clear
-tau = 1e-6; % 1 MHz
 
-sheetR = 100;       % 100 Ohms/sq
-layerC = 50e-15;    % 50 fF/um^2
+function [bestR, bestC] = PSO(tfCoeff)
 
 bound.R.low  = 1;
 bound.R.high = 100;
@@ -17,10 +13,17 @@ bound.C.high = 100;
 c1 = 0.7;
 c2 = 0.6;
 
+sheetR = 5e3;       % Estimated Sheet Resistance of HiResPoly
+                        % Assumes 1 square = 2um x 2um (reflected in
+                        % fitness function)
+layerC = 1e-15;     % Estimated Value for Capacitance per um^2 of poly
+tau = tfCoeff;
+
 iterMax = 20;
 
-S = 100;
+S = 200;
 gBest = [1000, 1000];
+
 for i = 1:S
     % Initialize particle position
     p(i).rsize = unifrnd(bound.R.low, bound.R.high);
@@ -77,26 +80,19 @@ for j = 1:iterMax
     end
 end
 
-for j = 1:iterMax
-   figure(j)
-   scatter(partBestR(j,:), partBestC(j,:), '.')
-   xlabel('R [squares]')
-   ylabel('C [um^2]')
-   axis([0, 1000, 0, 1000])
-end
-fprintf('Rsize = %.3g \t Csize = %.3g\n', gBest(1), gBest(2))
+% for j = 1:iterMax
+%    figure(j)
+%    scatter(partBestR(j,:), partBestC(j,:), 'k.')
+%    xlabel('R [squares]')
+%    ylabel('C [um^2]')
+%    axis([0, 1000, 0, 1000])
+% end
+
+bestR.size = gBest(1);
+bestR.val  = gBest(1)*sheetR;
+bestC.size = gBest(2);
+bestC.val  = gBest(2)*layerC;
 
 
-r = linspace(1,100,2000);
-R = sheetR.*r;
-C = tau./R;
-c = C./layerC;
-
-F = zeros(100,100);
-for i = 1:length(r)
-    for j = 1:length(c)
-        F(i,j) = 1/(r(i)/100 + c(j)/100);
-    end
 end
 
-surf(F)

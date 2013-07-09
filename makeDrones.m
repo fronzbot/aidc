@@ -8,24 +8,16 @@ function [drone] = makeDrones(Vout, Vref, gm, children)
 % The transfer function for the DC converter is defined in fitness.m
 % First, the function randomly chooses a control type of the following
 % structures:
-%  (s/wz1 + 1)        (s/wz1 + 1)                    (s/wz1 + 1)
-%  ----------- ; ---------------------- ; ---------------------------------
-%  (s/wp1 + 1)   (s/wp1 + 1)(s/wp2 + 1)   (s/wp1 + 1)(s/wp2 + 1)(s/wp2 + 1)
+%  (s/wz1 + 1)        (s/wz1 + 1)          
+%  ----------- ; ---------------------- 
+%  (s/wp1 + 1)   (s/wp1 + 1)(s/wp2 + 1)   
 %
-%  (s/wz1 + 1)(s/wz2 + 1)        (s/wz1 + 1)(s/wz2 + 1)
-%  ---------------------- ; ---------------------------------
-%  (s/wp1 + 1)(s/wp2 + 1)   (s/wp1 + 1)(s/wp2 + 1)(s/wp2 + 1)
+%       (s/wz1 + 1)(s/wz2 + 1)
+%  ---------------------------------
+%   (s/wp1 + 1)(s/wp2 + 1)(s/wp2 + 1)
 %
 % However, to allow more flexibility, the equations are reduced such that
 % coefficients can be modified as follows:
-%
-%   sa1 + a0          sa1 + a0                  sa1 + a0
-%  ----------- ; ------------------- ; --------------------------
-%   sb1 + b0      s^2b2 + sb1 + b0      s^3b3 + s^2b2 + sb1 + b0
-%
-%   s^2a2 + sa1 + a0         s^2a2 + sa1 + a0
-%  ------------------ ; --------------------------
-%   s^2b2 + sb1 + b0     s^3b3 + s^2b2 + sb1 + b0
 %
 % There is also a gain term, K, which is defined as K = gmRo*RB/(RT+RB)
 % In this application, gm is defined values and will not
@@ -49,7 +41,11 @@ for c = 1:children
     % Note that there cannot be more zeros than poles, so clamp the number of
     % zeros to satisfy this condition.
     if drone(c).Gzn > drone(c).Gpn
-        drone(c).Gzn = drone(c).Gpn;
+        if drone(c).Gpn > 1
+            drone(c).Gzn = drone(c).Gpn - 1;
+        else
+            drone(c).Gzn = 1;
+        end
     end
 
     % Loop through number of poles and zeros and randomly assign coefficients

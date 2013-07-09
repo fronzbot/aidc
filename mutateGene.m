@@ -7,15 +7,23 @@ function [ newGene ] = mutateGene(bee, origGene)
     if strcmp(origGene, 'Gpc')
         newGene = zeros(1, bee.Gpn);
         for i = 1:bee.Gpn
-            randFreq = (randi(9)+rand())*10^(randi(6));
-            newGene(i) = 1./(2*pi*randFreq);
+            if i == bee.Gpn
+                newGene(i) = 1;
+            else
+                randFreq = (randi(9)+rand())*10^(randi(6));
+                newGene(i) = 1./(2*pi*randFreq);
+            end
         end
 
     elseif strcmp(origGene, 'Gzc')
         newGene = zeros(1, bee.Gzn);
         for i = 1:bee.Gzn
-            randFreq = (randi(9)+rand())*10^(randi(6));
-            newGene(i) = 1./(2*pi*randFreq);
+            if i == bee.Gzn
+                newGene(i) = 1;
+            else
+                randFreq = (randi(9)+rand())*10^(randi(6));
+                newGene(i) = 1./(2*pi*randFreq);
+            end
         end
     
     elseif strcmp(origGene, 'Gpn')

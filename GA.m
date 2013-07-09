@@ -32,7 +32,7 @@ for i = 1:length(drone)
         end
         
         % Check if any genes mutate
-        if rand(1) <= queen.age/20
+        if rand(1) <= queen.age/10
             newQueen(1).(genes{j}) = mutateGene(queen, genes{j});
             newQueen(2).(genes{j}) = mutateGene(queen, genes{j});
         end
@@ -52,9 +52,11 @@ for i = 1:length(drone)
                 while length(newQueen(k).Gzc) < newQueen(k).Gzn
                     newQueen(k).Gzc(end+1) = 1./(2*pi*randi(500e3,1));
                 end
+                
                 while length(newQueen(k).Gzc) > newQueen(k).Gzn 
                     newQueen(k).Gzc = newQueen(k).Gzc(1:end-1);
                 end
+                
             end
             if strcmp(genes{j}, 'Gpn')
                 while length(newQueen(k).Gpc) < newQueen(k).Gpn
@@ -67,6 +69,10 @@ for i = 1:length(drone)
             
         end
     end % End Gene Count For Loop
+    
+    newQueen(k).Gzc(end) = 1;
+    newQueen(k).Gpc(end) = 1;
+    
     newQueen(1).age = 1;
     newQueen(2).age = 1;
     virginQueen(i) = queenCompete(newQueen(1), newQueen(2));
