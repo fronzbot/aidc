@@ -6,24 +6,24 @@ close all force;
 clear
 
 swarmSize = 20;
-iterMax   = 20;
+iterMax   = 10;
 %PSO is the PSO algorithm that iterates through each variable (dimension)
 %and finds returns the optimal solution.
+vars = {'poleCount', 'zeroCount', 'poleCoeffs', 'zeroCoeffs', 'Ro', 'RT'};
 
-controllerSelect = 0; % 0 = lag, 1 = lag with pole, 2 = lead, 3 = pid
-if controllerSelect == 0
-    vars = {'Ro', 'RT', 'Cz', 'Rz'};
-    bounds.Ro = [1e3, 100e3];
-    bounds.RT = [100e3, 10e6];
-    bounds.Cz = [1e-12, 1e-8];
-    bounds.Rz = [1, 1e3];
-    c(1).Ro = 2; c(2).Ro = 2;
-    c(1).RT = 2; c(2).RT = 2;
-    c(1).Rz = 10; c(2).Rz = 10;
-    c(1).Cz = 20; c(2).Cz = 20;
-end
+bounds.poleCount  = [1, 4];
+bounds.zeroCount  = [1, 3];
+bounds.poleCoeffs = [0, 1];
+bounds.zeroCoeffs = [0, 1];
+bounds.Ro         = [1e3, 100e3];
+bounds.RT         = [100e3, 10e6];
 
-
+c(1).poleCount  = 2; c(2).poleCount  = 2;
+c(1).zeroCount  = 2; c(2).zeroCount  = 2;
+c(1).poleCoeffs = 2; c(2).poleCoeffs = 2;
+c(1).zeroCoeffs = 2; c(2).zeroCoeffs = 2;
+c(1).Ro         = 2; c(2).Ro         = 2;
+c(1).RT         = 2; c(2).RT         = 2;
 
 for i = 1:length(vars)
     gBest.(vars{i}) = 'empty';
@@ -80,12 +80,12 @@ for i = 1:swarmSize
             gBest.(vars{j}) = p(i).localBest.(vars{j});
         end
     end
-    gBest.RB = 1/3.583*gBest.RT;
+    
     % Bound values if need be
     p(i) = boundPSO(p(i));
     
     % Update global best position
-    if psoFit(p(i).localBest) > psoFit(gBest)
+    if psoFit(p(i).localBest) < psoFit(gBest)
         gBest = p(i).localBest;
         gBest.RB = 1/3.583*gBest.RT;
     end
@@ -113,15 +113,29 @@ for k = 1:iterMax
     for i = 1:swarmSize
         for j = 1:length(vars)
             % Update velocity and position
-            p(i).vel.(vars{j}) = p(i).vel.(vars{j}) + c(1).(vars{j})*rand()*(p(i).localBest.(vars{j}) - p(i).(vars{j})) + ...
-                             c(2).(vars{j})*rand()*(gBest.(vars{j}) - p(i).(vars{j}));
-            p(i).vel.(vars{j}) = p(i).(vars{j}) + p(i).vel.(vars{j});
+            if strcmp('poleCoeffs', vars{j})
+                for n = 1:length(p(i).poleCoeffs)
+                    p(i).vel.(vars{j}) = p(i).vel.(vars{j}) + c(1).(vars{j})*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
+                                         c(2).(vars{j})*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n));
+                    p(i).vel.(vars{j}) = p(i).(vars{j})(n) + p(i).vel.(vars{j});
+                end
+            elseif strcmp('zeroCoeffs', vars{j})
+                for n = 1:length(p(i).zeroCoeffs)
+                    p(i).vel.(vars{j}) = p(i).vel.(vars{j}) + c(1).(vars{j})*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
+                                         c(2).(vars{j})*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n));
+                    p(i).vel.(vars{j}) = p(i).(vars{j})(n) + p(i).vel.(vars{j});
+                end
+            else
+                p(i).vel.(vars{j}) = p(i).vel.(vars{j}) + c(1).(vars{j})*rand()*(p(i).localBest.(vars{j}) - p(i).(vars{j})) + ...
+                                     c(2).(vars{j})*rand()*(gBest.(vars{j}) - p(i).(vars{j}));
+                p(i).vel.(vars{j}) = p(i).(vars{j}) + p(i).vel.(vars{j});
+            end
         end
     % Update best local positions
-        if psoFit(p(i)) > psoFit(p(i).localBest)
+        if psoFit(p(i)) < psoFit(p(i).localBest)
             p(i).localBest = p(i);
         end
-        if psoFit(p(i).localBest) > psoFit(gBest)
+        if psoFit(p(i).localBest) < psoFit(gBest)
             gBest = p(i).localBest;
             gBest.RB = 1/3.583*gBest.RT;
         end
@@ -131,11 +145,11 @@ for k = 1:iterMax
     
     if mod(k,5) == 0 || k == 1
         K = 0.1*gBest.Ro*gBest.RB/(gBest.RB+gBest.RT);
-        sys = K*tf([gBest.Rz*gBest.Cz 1], [gBest.Ro*gBest.Cz 1]);
+        sys = K*tf(gBest.zeroCoeffs, gBest.poleCoeffs);
         [pm, Gmarg, gain, bw] = getFreqInfo(boostTF()*sys);
         figure(1)
         step(feedback(sys*boostTF(),1));
-        title(sprintf('Gen %d, Fit %.3g, Gain = %.3g dB,\n \\phi_M = %.3g, Gm = %.3g, BW = %.3g', i, psoFit(gBest), gain, pm, Gmarg, bw));
+        title(sprintf('Gen %d, Fit %.3g, Gain = %.3g dB,\n \\phi_M = %.3g, Gm = %.3g, BW = %.3g', i, fitness(nestQueen), gain, pm, Gmarg, bw));
         h = gcf;
         set(findall(h,'type','text'),'fontName','Book Antiqua','fontSize',8, 'fontWeight', 'bold')
         set(h, 'Visible', 'off');

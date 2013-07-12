@@ -80,7 +80,7 @@ f_bw = -0.8*(bw-3.5/5)^2+1;
 % penalty = ptr+pts;
 
 % fitValue = (3*f_pm + f_g + f_gm + f_tr + f_ts + f_os) - penalty;
-fitValue = 3*pm + f_g + f_gm + 1.8*f_bw;
+fitValue = 3*f_pm + f_g + f_gm + 1.8*f_bw;
 if isnan(fitValue)
     fitValue = -1e15;
 end
