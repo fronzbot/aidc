@@ -10,8 +10,10 @@ warning('off', 'Control:analysis:MarginUnstable')
 % switched DC-DC converter.
 
 % Set maximum number of allowed iterations and number of children
-iterLimit  = 20;
-droneCount = 20;
+iterLimit  = 50;
+droneCount = 30;
+
+tic
 
 % Some converter characteristics
 gm   = 0.1;
@@ -40,6 +42,7 @@ fid = fopen('data.csv','wt');
 fprintf(fid, 'generation,fitness,tr,ts,os,pm,gain\n');
 fclose(fid);
 
+fitnessValues(1) = fitness(nestQueen);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%          GA         %%%
@@ -56,6 +59,8 @@ for i = 1:iterLimit
     nestQueen   = queenCompete(nestQueen, virginQueen);
     drones      = makeDrones(Vout, Vref, gm, droneCount);
     
+    fitnessValues(i+1) = fitness(nestQueen);
+    
     % Increment counter and waitbar
     waitbar(i/iterLimit, wait, sprintf('Simulating Generation %d of %d', i, iterLimit))
    
@@ -67,44 +72,24 @@ for i = 1:iterLimit
         K = nestQueen.gm * nestQueen.Gro * nestQueen.Grb/(nestQueen.Grt+nestQueen.Grb);
         sys = K*tf(nestQueen.Gzc, nestQueen.Gpc);
         [pm, Gmarg, gain, bw] = getFreqInfo(boostTF()*sys);
-        figure(1)
-        step(feedback(sys*boostTF(),1));
+        [y,t]=step(feedback(sys*boostTF(),1));
+        figure
+        plot(t,y);
         title(sprintf('Gen %d, Fit %.3g, Gain = %.3g dB,\n \\phi_M = %.3g, Gm = %.3g, BW = %.3g', i, fitness(nestQueen), gain, pm, Gmarg, bw));
+        xlabel('Time [s]')
+        ylabel('Amplitude')
         h = gcf;
-        set(findall(h,'type','text'),'fontName','Book Antiqua','fontSize',8, 'fontWeight', 'bold')
+        hl = 0;
+        fixFig(h,hl,'Best',false)
         set(h, 'Visible', 'off');
         filename = sprintf('images/generation%d.png',i);
-        saveas(h, filename);
+        r = 600; % pixels per inch
+        print(gcf,'-dpng',sprintf('-r%d',r), filename);
     end
 end
 delete(wait)
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%         PSO         %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Optimize Component Values
-wait = waitbar(0, sprintf('Optimizing Components %d%', 0), ...
-               'Name', 'AIDC - Genetic Algorithm Simulation', ...
-               'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
-setappdata(wait,'canceling',0)
-iter = 0;
-total = nestQueen.Gzn + nestQueen.Gpn;
-for i = 1:nestQueen.Gzn
-    [nestQueen.ZeroRs(i), nestQueen.ZeroCs(i)] = PSO(nestQueen.Gzc(i));
-    % Increment counter and waitbar
-    iter = iter+1;
-    waitbar(iter/total, wait, sprintf('Optimizing Components %d%', 0))
-end
-
-for i = 1:nestQueen.Gpn
-    [nestQueen.PoleRs(i), nestQueen.PoleCs(i)] = PSO(nestQueen.Gpc(i));
-    % Increment counter and waitbar
-    iter = iter+1;
-    waitbar(iter/total, wait, sprintf('Optimizing Components %d%', 0))
-end
-delete(wait)
 
 fprintf('Best Transfer Function\n')
 fprintf('**********************\n')
@@ -113,5 +98,11 @@ K*tf(nestQueen.Gzc, nestQueen.Gpc)
 fprintf('**********************\n')
 fprintf('With Fitness: %.3g\n', fitness(nestQueen))
 
+figure
+plot(1:length(fitnessValues),fitnessValues)
+title('Fitness Per Generation')
+xlabel('Generation')
+ylabel('Fitness Value')
 
+toc
 
