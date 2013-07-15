@@ -30,7 +30,7 @@ if nargin < 1
     fig = figure(1);
 end
 
-noMark = 1;
+
 
 linMark = 1;
 figure(fig)

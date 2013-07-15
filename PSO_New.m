@@ -7,7 +7,7 @@ clear
 
 tic
 swarmSize = 30;
-iterMax   = 50;
+iterMax   = 20;
 %PSO is the PSO algorithm that iterates through each variable (dimension)
 %and finds returns the optimal solution.
 vars = {'poleCount', 'zeroCount', 'poleCoeffs', 'zeroCoeffs', 'Ro', 'RT'};
