@@ -7,6 +7,7 @@ function [phaseMarg, gainMarg, dcGain, bandwidth] = getFreqInfo(system)
     phaseMarg = -180;
     gainMarg  = -100;
     bandwidth = 0;
+    
     % If phase starts at 360 or 270 (for integrator)
     if (phase(1) <= 380 && phase(1) >= 340) || (phase(1) <= 290 && phase(1) >= 250)
         phaseMod  = 180;

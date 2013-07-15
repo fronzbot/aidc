@@ -4,7 +4,7 @@
 % 2013.06.28
 
 close all force;
-clear
+clearvars -except fitValsGA1 fitValsGA2 fitValsPSO
 warning('off', 'Control:analysis:MarginUnstable')
 % This program begins the GA to optimize the controller design for a
 % switched DC-DC converter.

@@ -28,16 +28,16 @@ bw       = bw/2e3;
 penalty = 0;
 
 if outsideRange(gain, 0.3, 1.2)
-    penalty = penalty + 2*max(5, abs(gain));
+    penalty = penalty + 2*max(1, abs(gain));
 end
 if outsideRange(pm, 0.3, 1.2)
-    penalty = penalty + 2*max(5, abs(pm));
+    penalty = penalty + 2*max(1, abs(pm));
 end
-if outsideRange(gainMarg, 0.3, 1.2)
-    penalty = penalty + 2*max(5, abs(gainMarg));
+if outsideRange(gainMarg, 0.5, 1.2)
+    penalty = penalty + 2*max(1, abs(gainMarg));
 end
 if outsideRange(bw, 0.3, 1.2)
-    penalty = penalty + 2*max(5, abs(bw));
+    penalty = penalty + 4*max(1, abs(bw));
 end
 
 % Create parabolas
