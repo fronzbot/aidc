@@ -1,5 +1,5 @@
 function [phaseMarg, gainMarg, dcGain, bandwidth] = getFreqInfo(system)
-    freq = logspace(0,9,100);
+    freq = logspace(1,9,100);
     [mag, phase] = bode(system,freq);
     magdb = squeeze(20*log10(mag(1,1,:)));
     phase = squeeze(phase(1,1,:));
@@ -43,7 +43,7 @@ function [phaseMarg, gainMarg, dcGain, bandwidth] = getFreqInfo(system)
     if phaseMarg > 100
         phaseMarg = -180;
     end
-    if bandwidth > 100e3
+    if bandwidth > 1e6
         bandwidth = 1;
     end
     

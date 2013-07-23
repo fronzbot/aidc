@@ -14,39 +14,33 @@ boost = boostTF();
 controller = bee.gm*bee.Gro*bee.Grb/(bee.Grt + bee.Grb)*tf(bee.Gzc, bee.Gpc);
 system = boost*controller;
 
-[pm, gainMarg, gain, bw] = getFreqInfo(system);
-
-
+[pm, gainMarg, gain, ~] = getFreqInfo(system);
 
 % Normalize all values
 pm       = pm/70;
-gain     = gain/60;
+gain     = gain/70;
 gainMarg = gainMarg/40; 
-bw       = bw/2e3;
-
 
 penalty = 0;
 
-if outsideRange(gain, 0.3, 1.2)
-    penalty = penalty + 2*max(1, abs(gain));
+if outsideRange(gain, 0.9, 1.4)
+    penalty = penalty + 3*max(1, abs(gain));
 end
 if outsideRange(pm, 0.3, 1.2)
-    penalty = penalty + 2*max(1, abs(pm));
+    penalty = penalty + 3*max(1, abs(pm));
 end
-if outsideRange(gainMarg, 0.5, 1.2)
+if outsideRange(gainMarg, 0.5, 1.1)
     penalty = penalty + 2*max(1, abs(gainMarg));
 end
-if outsideRange(bw, 0.3, 1.2)
-    penalty = penalty + 4*max(1, abs(bw));
-end
+
 
 % Create parabolas
 f_pm = -(pm-1)^2+1;
 f_g  = -(gain-1)^2+1;
 f_gm = -(gainMarg-1)^2+1;
-f_bw = -(bw-1)^2+1;
 
-fitValue = (3*f_pm + 2*f_g + 0.6*f_gm + 1.8*f_bw)-penalty;
+
+fitValue = (3*f_pm + 2*f_g + 0.6*f_gm)-penalty;
 
 end
 

@@ -5,9 +5,16 @@
 close all force;
 clearvars -except fitValsGA1 fitValsGA2 fitValsPSO
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% CHOOSE PRINT OR PLOT %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+PRINT = false;
+PLOT  = true;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 tic
-swarmSize = 20;
-iterMax   = 50;
+swarmSize = 30;
+iterMax   = 20;
 %PSO is the PSO algorithm that iterates through each variable (dimension)
 %and finds returns the optimal solution.
 vars = {'poleCount', 'zeroCount', 'poleCoeffs', 'zeroCoeffs', 'Ro', 'RT'};
@@ -37,6 +44,19 @@ wait = waitbar(0, sprintf('Initializing Particle %d of %d', 0, swarmSize), ...
                %'CreateCancelBtn', 'setappdata(gcbf, ''canceling'', 1)');
 setappdata(wait,'canceling',0)
 
+%%%%%%%%%%%%%%%%%%%%
+%%% FIGURE STUFF %%%
+%%%%%%%%%%%%%%%%%%%%
+t = 0:0.1:1;
+y = 1;
+h = plot(t,y,'k','LineWidth',3);
+set(h, 'YDataSource', 'y');
+set(h, 'XDataSource', 't');
+title('Starting Point')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% SWARM INITIALIZATION %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i = 1:swarmSize
     % Initialize array sizes to maximum allowed values
     p(i).poleCoeffs           = zeros(1,4);
@@ -126,7 +146,11 @@ setappdata(wait,'canceling',0)
 
 denom = iterMax*swarmSize;
 progress = 0;
-% Run actual PSO
+
+
+%%%%%%%%%%%%%%%
+%%% RUN PSO %%%
+%%%%%%%%%%%%%%%
 for k = 1:iterMax
     
     % Check for Cancel Button Press
@@ -186,7 +210,19 @@ for k = 1:iterMax
     end
     fitnessValues(k+1) = psoFit(gBest);
     
-    if mod(k,5) == 0 || k == 1
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% FIGURE PRINTING/PLOTTING %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if PLOT
+        K = 0.1*gBest.Ro*gBest.RB/(gBest.RB+gBest.RT);
+        sys = K*tf(gBest.zeroCoeffs(1:gBest.zeroCount), gBest.poleCoeffs(1:gBest.poleCount));
+        [pm, Gmarg, gain, bw] = getFreqInfo(boostTF()*sys);
+        [y,t] = step(feedback(sys*boostTF(),1));
+        refreshdata
+        title(sprintf('Gen %d, Fit %.3g, Gain = %.3g dB,\n \\phi_M = %.3g, Gm = %.3g, BW = %.3g', k, psoFit(gBest), gain, pm, Gmarg, bw));
+    end
+    
+    if (mod(k,5) == 0 || k == 1) && PRINT
         K = 0.1*gBest.Ro*gBest.RB/(gBest.RB+gBest.RT);
         sys = K*tf(gBest.zeroCoeffs(1:gBest.zeroCount), gBest.poleCoeffs(1:gBest.poleCount));
         [pm, Gmarg, gain, bw] = getFreqInfo(boostTF()*sys);
@@ -208,11 +244,14 @@ for k = 1:iterMax
 end
 delete(wait)
 
-
+%%%%%%%%%%%%%%%%%%%%%
+%%% PRINT RESULTS %%%
+%%%%%%%%%%%%%%%%%%%%%
 fprintf('Best Transfer Function\n')
 fprintf('**********************\n')
 K = 0.1*gBest.Ro*gBest.RB/(gBest.RB+gBest.RT);
 sys= K*tf(gBest.zeroCoeffs(1:gBest.zeroCount), gBest.poleCoeffs(1:gBest.poleCount))
+fprintf('\tRT=%.3g\tRB=%.3g\n',gBest.RT, gBest.RB)
 fprintf('**********************\n')
 fprintf('With Fitness: %.3g\n', psoFit(gBest))
 

@@ -5,7 +5,7 @@
 
 function [sys] = boostTF()
 % Boost DCM ideal TF
-R  = 1;
+R  = 300;
 L  = 18e-6;
 C  = 4.7e-6;
 Vo = 5.5;
