@@ -19,16 +19,16 @@ system = boost*controller;
 [pm, gainMarg, gain, ~] = getFreqInfo(system);
 
 % Normalize all values
-pm       = pm/70;
+pm       = pm/50;
 gain     = gain/60;
-gainMarg = gainMarg/40; 
+gainMarg = gainMarg/35; 
 
 penalty = 0;
 
-if outsideRange(gain, 0.3, 1.2)
+if outsideRange(gain, 0.8, 1.2)
     penalty = penalty + 3*max(1, abs(gain));
 end
-if outsideRange(pm, 0.3, 1.2)
+if outsideRange(pm, 0.6, 1.2)
     penalty = penalty + 3*max(1, abs(pm));
 end
 if outsideRange(gainMarg, 0.5, 1.2)

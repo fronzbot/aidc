@@ -28,7 +28,8 @@ bounds.RT         = [100e3, 10e6];
 
 
 % Velocity Coefficients
-c1 = 2; c2 = 1.9;
+%c1 = 2; c2 = 1.9;
+c1 = 1; c2 = 3.1;
 
 % Constriction Factor
 phi = c1+c2;
