@@ -17,11 +17,13 @@ controller = gm*pBest.Ro*pBest.RB/(pBest.RB+pBest.RT)*tf(pBest.zeroCoeffs(1:pBes
 system = boost*controller;
 
 [pm, gainMarg, gain, ~] = getFreqInfo(system);
+stepdata = stepinfo(system);
+ts = stepdata.SettlingTime;
 
 % Normalize all values
 pm       = pm/50;
 gain     = gain/60;
-gainMarg = gainMarg/35; 
+gainMarg = gainMarg/35;
 
 penalty = 0;
 
@@ -34,6 +36,9 @@ end
 if outsideRange(gainMarg, 0.5, 1.2)
     penalty = penalty + 2*max(1, abs(gainMarg));
 end
+if ts > 0.1 || isnan(ts)
+    penalty = penalty + 2*max(1,abs(ts));
+end
 
 % Create parabolas
 f_pm = -(pm-1)^2+1;
@@ -41,7 +46,7 @@ f_g  = -(gain-1)^2+1;
 f_gm = -(gainMarg-1)^2+1;
 
 
-fitVal = (3*f_pm + 2*f_g + 0.6*f_gm )-penalty;
+fitVal = (3*f_pm + 2*f_g + 0.6*f_gm)-penalty;
 end
 
 

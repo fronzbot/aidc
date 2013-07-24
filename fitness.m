@@ -15,6 +15,8 @@ controller = bee.gm*bee.Gro*bee.Grb/(bee.Grt + bee.Grb)*tf(bee.Gzc, bee.Gpc);
 system = boost*controller;
 
 [pm, gainMarg, gain, ~] = getFreqInfo(system);
+stepdata = stepinfo(system);
+ts = stepdata.SettlingTime;
 
 % Normalize all values
 pm       = pm/50;
@@ -32,7 +34,9 @@ end
 if outsideRange(gainMarg, 0.5, 1.2)
     penalty = penalty + 2*max(1, abs(gainMarg));
 end
-
+if ts > 0.1 || isnan(ts)
+    penalty = penalty + 2*max(2,abs(ts));
+end
 
 
 

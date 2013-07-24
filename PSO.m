@@ -21,8 +21,8 @@ vars = {'poleCount', 'zeroCount', 'poleCoeffs', 'zeroCoeffs', 'Ro', 'RT'};
 
 bounds.poleCount  = [2, 4];
 bounds.zeroCount  = [2, 3];
-bounds.poleCoeffs = [1/(2*pi*1e6), 1/(2*pi*1)];    
-bounds.zeroCoeffs = [1/(2*pi*1e6), 1/(2*pi*1)];     
+bounds.poleCoeffs = [1/(2*pi*1e6), 1/(2*pi*10)];    
+bounds.zeroCoeffs = [1/(2*pi*1e6), 1/(2*pi*10)];     
 bounds.Ro         = [1e3, 100e3];
 bounds.RT         = [100e3, 10e6];
 
@@ -33,7 +33,7 @@ c1 = 1; c2 = 3.1;
 
 % Constriction Factor
 phi = c1+c2;
-CHI = abs(2/(2-phi-sqrt(phi^2-4*phi)));
+CHI = -2/(2-phi-sqrt(phi^2-4*phi));
 
 
 for i = 1:length(vars)
@@ -164,6 +164,8 @@ for k = 1:iterMax
         % Increment counter and waitbar
         progress = progress + 1;
         waitbar(progress/denom, wait, sprintf('PSO Iteration %d of %d', k, iterMax))
+        
+        
         for j = 1:length(vars)
             % Constrain pole/zero Count to be integers
             p(i) = boundPSO(p(i));
@@ -178,16 +180,14 @@ for k = 1:iterMax
                                             c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n)));
                     p(i).(vars{j})(n) = abs(p(i).(vars{j})(n) + p(i).vel.(vars{j})(n));
                 end
-                %p(i).poleCoeffs(end) = 1;
-                %p(i).poleCoeffs(p(i).poleCoeffs > 1) = 1;
+                
             elseif strcmp('zeroCoeffs', vars{j})
                 for n = 1:p(i).zeroCount
                     p(i).vel.(vars{j})(n) = CHI*(p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
                                             c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n)));
                     p(i).(vars{j})(n) = abs(p(i).(vars{j})(n) + p(i).vel.(vars{j})(n));
                 end
-                %p(i).zeroCoeffs(end) = 1;
-                %p(i).zeroCoeffs(p(i).zeroCoeffs > 1) = 1;
+                
             else
                 p(i).vel.(vars{j}) = CHI*(p(i).vel.(vars{j}) + c1*rand()*(p(i).localBest.(vars{j}) - p(i).(vars{j})) + ...
                                      c2*rand()*(gBest.(vars{j}) - p(i).(vars{j})));
