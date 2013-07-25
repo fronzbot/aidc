@@ -3,9 +3,9 @@
 % storeVariables.m
 % 2013.06.28
 
-function [] = storeVariables( iter, bee )
+function [] = storeVariables( iter, bee, opts )
 % The following is for a ideal boost converter operating in DCM
-boost = boostTF();
+boost = boostTF(opts);
 
 % Begin constructing each system and analyze the fitness
 controller = bee.gm*bee.Gro*bee.Grb/(bee.Grt + bee.Grb)*tf(bee.Gzc, bee.Gpc);
@@ -20,7 +20,7 @@ os = stepvals.Overshoot;
 [~, pm] = margin(system);
 gain    = dcgain(system);
 
-fit = fitness(bee);
+fit = fitness(bee, opts);
 
 if isnan(os)
     os = Inf;

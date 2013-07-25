@@ -3,8 +3,8 @@
 % psoFit.m
 % 2013.07.12
 
-function [fitVal] = psoFit(pBest)
-boost = boostTF();
+function [fitVal] = psoFit(pBest, opts)
+boost = boostTF(opts);
 
 % Extract RB from RT val
 pBest.RB = 1/3.583*pBest.RT;

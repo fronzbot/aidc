@@ -3,12 +3,12 @@
 % fitness.m
 % 2013.06.28
 
-function [ fitValue ] = fitness( bee )
+function [ fitValue ] = fitness( bee, opts )
 %This function places each system into the switched converter and evaluates
 % the fitness value for each based on experimentally gathered data. 
 
 % The following is for a ideal boost converter operating in DCM
-boost = boostTF();
+boost = boostTF(opts);
 
 % Begin constructing each system and analyze the fitness
 controller = bee.gm*bee.Gro*bee.Grb/(bee.Grt + bee.Grb)*tf(bee.Gzc, bee.Gpc);

@@ -2,21 +2,19 @@
 % aidc
 % PSO.m
 % 2013.07.08
-close all force;
-clearvars -except fitValsGA1 fitValsGA2 fitValsPSO
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% CHOOSE PRINT OR PLOT %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-PRINT = false;
-PLOT  = true;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-tic
-swarmSize = 30;
-iterMax   = 20;
+function [fitnessValues] = PSO(opts)
 %PSO is the PSO algorithm that iterates through each variable (dimension)
 %and finds returns the optimal solution.
+
+
+PRINT = opts.Print;
+PLOT  = opts.Plot;
+
+tic
+swarmSize = opts.Size;
+iterMax   = opts.Iter;
+
 vars = {'poleCount', 'zeroCount', 'poleCoeffs', 'zeroCoeffs', 'Ro', 'RT'};
 
 bounds.poleCount  = [2, 4];
@@ -27,14 +25,24 @@ bounds.Ro         = [1e3, 100e3];
 bounds.RT         = [100e3, 10e6];
 
 
-% Velocity Coefficients
-%c1 = 2; c2 = 1.9;
-c1 = 1; c2 = 3.1;
+if strcmpi(opts.PSOType, 'Constrict')
+    constrict = true;
+    
+    % Velocity Coefficients
+    c1 = 1; c2 = 3.1;
 
-% Constriction Factor
-phi = c1+c2;
-CHI = -2/(2-phi-sqrt(phi^2-4*phi));
-
+    % Constriction Factor
+    phi = c1+c2;
+    CHI = -2/(2-phi-sqrt(phi^2-4*phi));
+elseif strcmpi(opts.PSOType, 'Weight')
+    constrict = false;
+    
+    % Set initial and final weights
+    w1 = 0.9; w2 = 0.4;
+    
+    % Set velocity coefficients
+    c1 = 2; c2 = 2;
+end
 
 for i = 1:length(vars)
     gBest.(vars{i}) = 'empty';
@@ -50,6 +58,7 @@ setappdata(wait,'canceling',0)
 %%%%%%%%%%%%%%%%%%%%
 t = 0:0.1:1;
 y = 1;
+figure
 h = plot(t,y,'k','LineWidth',3);
 set(h, 'YDataSource', 'y');
 set(h, 'XDataSource', 't');
@@ -131,11 +140,11 @@ for i = 1:swarmSize
     gBest.RB = 1/3.583*gBest.RT;
     
     % Update global best position
-    if psoFit(p(i).localBest) > psoFit(gBest)
+    if psoFit(p(i).localBest, opts) > psoFit(gBest, opts)
         gBest = p(i).localBest;
         gBest.RB = 1/3.583*gBest.RT;
     end
-    fitnessValues(1) = psoFit(gBest);
+    fitnessValues(1) = psoFit(gBest, opts);
 end
 close(wait)
 
@@ -176,22 +185,59 @@ for k = 1:iterMax
             % Update velocity and position
             if strcmp('poleCoeffs', vars{j})
                 for n = 1:p(i).poleCount
-                    p(i).vel.(vars{j})(n) = CHI*(p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
-                                            c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n)));
-                    p(i).(vars{j})(n) = abs(p(i).(vars{j})(n) + p(i).vel.(vars{j})(n));
+                    if constrict
+                        % Use Constriction for Velocity
+                        p(i).vel.(vars{j})(n) = CHI*(p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
+                                                c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n)));
+                        p(i).(vars{j})(n) = abs(p(i).(vars{j})(n) + p(i).vel.(vars{j})(n));
+                    else
+                        % Use Chaotic Intertial Weight for Velocity
+                        z = rand();
+                        z = 4*z*(1-z);
+                        w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                     
+                        p(i).vel.(vars{j})(n) = w*p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
+                                                c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n));
+                        p(i).(vars{j})(n) = abs(p(i).(vars{j})(n) + p(i).vel.(vars{j})(n));
+
+                    end
                 end
                 
             elseif strcmp('zeroCoeffs', vars{j})
                 for n = 1:p(i).zeroCount
-                    p(i).vel.(vars{j})(n) = CHI*(p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
-                                            c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n)));
-                    p(i).(vars{j})(n) = abs(p(i).(vars{j})(n) + p(i).vel.(vars{j})(n));
+                    if constrict
+                        % Use Constriction for Velocity
+                        p(i).vel.(vars{j})(n) = CHI*(p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
+                                                c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n)));
+                        p(i).(vars{j})(n) = abs(p(i).(vars{j})(n) + p(i).vel.(vars{j})(n));
+                    else
+                        % Use Chaotic Inertial Weight for Velocity
+                        z = rand();
+                        z = 4*z*(1-z);
+                        w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                        
+                        p(i).vel.(vars{j})(n) = w*p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
+                                                c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n));
+                        p(i).(vars{j})(n) = abs(p(i).(vars{j})(n) + p(i).vel.(vars{j})(n));
+                    end
                 end
                 
             else
-                p(i).vel.(vars{j}) = CHI*(p(i).vel.(vars{j}) + c1*rand()*(p(i).localBest.(vars{j}) - p(i).(vars{j})) + ...
-                                     c2*rand()*(gBest.(vars{j}) - p(i).(vars{j})));
-                p(i).(vars{j}) = p(i).(vars{j}) + p(i).vel.(vars{j});
+                if constrict
+                    % Use Constriction for Velocity
+                    p(i).vel.(vars{j}) = CHI*(p(i).vel.(vars{j}) + c1*rand()*(p(i).localBest.(vars{j}) - p(i).(vars{j})) + ...
+                                         c2*rand()*(gBest.(vars{j}) - p(i).(vars{j})));
+                    p(i).(vars{j}) = p(i).(vars{j}) + p(i).vel.(vars{j});
+                else
+                    % Use Chaotic Interval Weight for Velocity
+                    z = rand();
+                    z = 4*z*(1-z);
+                    w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                    p(i).vel.(vars{j}) = w*p(i).vel.(vars{j}) + c1*rand()*(p(i).localBest.(vars{j}) - p(i).(vars{j})) + ...
+                                         c2*rand()*(gBest.(vars{j}) - p(i).(vars{j}));
+                    p(i).(vars{j}) = p(i).(vars{j}) + p(i).vel.(vars{j});
+                end
+                    
             end
         end
         
@@ -200,16 +246,16 @@ for k = 1:iterMax
         p(i) = boundPSO(p(i));
         
         % Update best local positions
-        if psoFit(p(i)) > psoFit(p(i).localBest)
+        if psoFit(p(i), opts) > psoFit(p(i).localBest, opts)
             p(i).localBest = p(i);
         end
-        if psoFit(p(i).localBest) > psoFit(gBest)
+        if psoFit(p(i).localBest, opts) > psoFit(gBest, opts)
             gBest = p(i).localBest;
             gBest.RB = 1/3.583*gBest.RT;
         end
 
     end
-    fitnessValues(k+1) = psoFit(gBest);
+    fitnessValues(k+1) = psoFit(gBest, opts);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% FIGURE PRINTING/PLOTTING %%%
@@ -217,20 +263,20 @@ for k = 1:iterMax
     if PLOT
         K = 0.1*gBest.Ro*gBest.RB/(gBest.RB+gBest.RT);
         sys = K*tf(gBest.zeroCoeffs(1:gBest.zeroCount), gBest.poleCoeffs(1:gBest.poleCount));
-        [pm, Gmarg, gain, bw] = getFreqInfo(boostTF()*sys);
-        [y,t] = step(feedback(sys*boostTF(),1));
-        refreshdata
-        title(sprintf('Gen %d, Fit %.3g, Gain = %.3g dB,\n \\phi_M = %.3g, Gm = %.3g, BW = %.3g', k, psoFit(gBest), gain, pm, Gmarg, bw));
+        [pm, Gmarg, gain, bw] = getFreqInfo(boostTF(opts)*sys);
+        [y,t] = step(feedback(sys*boostTF(opts),1));
+        refreshdata(h,'caller')
+        title(sprintf('Gen %d, Fit %.3g, Gain = %.3g dB,\n \\phi_M = %.3g, Gm = %.3g, BW = %.3g', k, psoFit(gBest, opts), gain, pm, Gmarg, bw));
     end
     
-    if (mod(k,5) == 0 || k == 1) && PRINT
+    if (mod(k,opts.PrintNum) == 0 || k == 1) && PRINT
         K = 0.1*gBest.Ro*gBest.RB/(gBest.RB+gBest.RT);
         sys = K*tf(gBest.zeroCoeffs(1:gBest.zeroCount), gBest.poleCoeffs(1:gBest.poleCount));
-        [pm, Gmarg, gain, bw] = getFreqInfo(boostTF()*sys);
-        [y,t] = step(feedback(sys*boostTF(),1));
+        [pm, Gmarg, gain, bw] = getFreqInfo(boostTF(opts)*sys);
+        [y,t] = step(feedback(sys*boostTF(opts),1));
         figure
         plot(t,y);
-        title(sprintf('Gen %d, Fit %.3g, Gain = %.3g dB,\n \\phi_M = %.3g, Gm = %.3g, BW = %.3g', k, psoFit(gBest), gain, pm, Gmarg, bw));
+        title(sprintf('Gen %d, Fit %.3g, Gain = %.3g dB,\n \\phi_M = %.3g, Gm = %.3g, BW = %.3g', k, psoFit(gBest, opts), gain, pm, Gmarg, bw));
         xlabel('Time [s]')
         ylabel('Amplitude')
         h = gcf;
@@ -254,7 +300,7 @@ K = 0.1*gBest.Ro*gBest.RB/(gBest.RB+gBest.RT);
 sys= K*tf(gBest.zeroCoeffs(1:gBest.zeroCount), gBest.poleCoeffs(1:gBest.poleCount))
 fprintf('\tRT=%.3g\tRB=%.3g\n',gBest.RT, gBest.RB)
 fprintf('**********************\n')
-fprintf('With Fitness: %.3g\n', psoFit(gBest))
+fprintf('With Fitness: %.3g\n', psoFit(gBest, opts))
 
 figure
 plot(1:length(fitnessValues),fitnessValues)
@@ -262,3 +308,5 @@ title('Fitness of PSO')
 xlabel('Iteration')
 ylabel('Fitness of Global Best')
 toc
+
+end
