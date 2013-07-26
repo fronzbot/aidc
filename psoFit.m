@@ -21,9 +21,15 @@ stepdata = stepinfo(system);
 ts = stepdata.SettlingTime;
 
 % Normalize all values
-pm       = pm/50;
-gain     = gain/60;
-gainMarg = gainMarg/35;
+if strcmpi(opts.mode, 'DCM')
+    pm       = pm/50;
+    gain     = gain/60;
+    gainMarg = gainMarg/35;
+elseif strcmpi(opts.mode, 'CCM')
+    pm       = pm/45;
+    gain     = gain/50;
+    gainMarg = gainMarg/20;
+end
 
 penalty = 0;
 
@@ -37,7 +43,7 @@ if outsideRange(gainMarg, 0.5, 1.2)
     penalty = penalty + 2*max(1, abs(gainMarg));
 end
 if ts > 0.1 || isnan(ts)
-    penalty = penalty + 2*max(1,abs(ts));
+    penalty = penalty + 2*max(2,abs(ts));
 end
 
 % Create parabolas

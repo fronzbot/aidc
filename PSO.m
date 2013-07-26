@@ -19,9 +19,9 @@ vars = {'poleCount', 'zeroCount', 'poleCoeffs', 'zeroCoeffs', 'Ro', 'RT'};
 
 bounds.poleCount  = [2, 4];
 bounds.zeroCount  = [2, 3];
-bounds.poleCoeffs = [1/(2*pi*1e6), 1/(2*pi*10)];    
-bounds.zeroCoeffs = [1/(2*pi*1e6), 1/(2*pi*10)];     
-bounds.Ro         = [1e3, 100e3];
+bounds.poleCoeffs = [1/(2*pi*1e7), 1/(2*pi)];    
+bounds.zeroCoeffs = [1/(2*pi*1e7), 1/(2*pi)];     
+bounds.Ro         = [1e3, 100e6];
 bounds.RT         = [100e3, 10e6];
 
 
@@ -194,7 +194,8 @@ for k = 1:iterMax
                         % Use Chaotic Intertial Weight for Velocity
                         z = rand();
                         z = 4*z*(1-z);
-                        w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                        w = 0.5*rand()+0.5*z;
+                        %w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
                      
                         p(i).vel.(vars{j})(n) = w*p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
                                                 c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n));
@@ -214,7 +215,8 @@ for k = 1:iterMax
                         % Use Chaotic Inertial Weight for Velocity
                         z = rand();
                         z = 4*z*(1-z);
-                        w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                        w = 0.5*rand()+0.5*z;
+                        %w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
                         
                         p(i).vel.(vars{j})(n) = w*p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
                                                 c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n));
@@ -232,7 +234,8 @@ for k = 1:iterMax
                     % Use Chaotic Interval Weight for Velocity
                     z = rand();
                     z = 4*z*(1-z);
-                    w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                    w = 0.5*rand()+0.5*z;
+                    %w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
                     p(i).vel.(vars{j}) = w*p(i).vel.(vars{j}) + c1*rand()*(p(i).localBest.(vars{j}) - p(i).(vars{j})) + ...
                                          c2*rand()*(gBest.(vars{j}) - p(i).(vars{j}));
                     p(i).(vars{j}) = p(i).(vars{j}) + p(i).vel.(vars{j});

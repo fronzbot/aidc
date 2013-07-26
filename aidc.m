@@ -56,6 +56,14 @@ else
     end
 end
 
+% If no parameters selected yet CCM used, change default values
+if strcmpi(options.mode, 'CCM')
+    options.L  = 180e-6;
+    options.C  = 10e-6;
+    options.R  = 10;
+    options.Vs = 3.5;
+end
+
 % Run either GA or PSO
 if strcmpi(options.Algorithm, 'GA')
     fit.GA  = GA(options);
