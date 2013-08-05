@@ -27,19 +27,28 @@ bounds.RT         = [100e3, 10e6];
 
 if strcmpi(opts.PSOType, 'Constrict')
     constrict = true;
-    
+    cdiw = false;
+    criw = false;
     % Velocity Coefficients
     c1 = 1; c2 = 3.1;
 
     % Constriction Factor
     phi = c1+c2;
     CHI = -2/(2-phi-sqrt(phi^2-4*phi));
-elseif strcmpi(opts.PSOType, 'Weight')
+elseif strcmpi(opts.PSOType, 'CDIW')
     constrict = false;
-    
+    cdiw = true;
+    criw = false;
     % Set initial and final weights
     w1 = 0.9; w2 = 0.4;
     
+    % Set velocity coefficients
+    c1 = 2; c2 = 2;
+elseif strcmpi(opts.PSOType, 'CRIW')
+    constrict = false;
+    cdiw = false;
+    criw = true;
+   
     % Set velocity coefficients
     c1 = 2; c2 = 2;
 end
@@ -136,6 +145,7 @@ for i = 1:swarmSize
         if strcmp('empty', gBest.(vars{j}))
             gBest.(vars{j}) = p(i).localBest.(vars{j});
         end
+        
     end
     gBest.RB = 1/3.583*gBest.RT;
     
@@ -194,8 +204,11 @@ for k = 1:iterMax
                         % Use Chaotic Intertial Weight for Velocity
                         z = rand();
                         z = 4*z*(1-z);
-                        w = 0.5*rand()+0.5*z;
-                        %w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                        if cdiw
+                            w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                        elseif criw
+                            w = 0.5*rand()+0.5*z;
+                        end
                      
                         p(i).vel.(vars{j})(n) = w*p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
                                                 c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n));
@@ -215,8 +228,11 @@ for k = 1:iterMax
                         % Use Chaotic Inertial Weight for Velocity
                         z = rand();
                         z = 4*z*(1-z);
-                        w = 0.5*rand()+0.5*z;
-                        %w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                        if cdiw
+                            w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                        elseif criw
+                            w = 0.5*rand()+0.5*z;
+                        end
                         
                         p(i).vel.(vars{j})(n) = w*p(i).vel.(vars{j})(n) + c1*rand()*(p(i).localBest.(vars{j})(n) - p(i).(vars{j})(n)) + ...
                                                 c2*rand()*(gBest.(vars{j})(n) - p(i).(vars{j})(n));
@@ -234,8 +250,11 @@ for k = 1:iterMax
                     % Use Chaotic Interval Weight for Velocity
                     z = rand();
                     z = 4*z*(1-z);
-                    w = 0.5*rand()+0.5*z;
-                    %w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                    if cdiw
+                        w = (w1-w2)*(iterMax-k)/iterMax + z*w2;
+                    elseif criw
+                        w = 0.5*rand()+0.5*z;
+                    end
                     p(i).vel.(vars{j}) = w*p(i).vel.(vars{j}) + c1*rand()*(p(i).localBest.(vars{j}) - p(i).(vars{j})) + ...
                                          c2*rand()*(gBest.(vars{j}) - p(i).(vars{j}));
                     p(i).(vars{j}) = p(i).(vars{j}) + p(i).vel.(vars{j});

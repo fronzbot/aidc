@@ -3,7 +3,7 @@
 % QBGA.m
 % 2013.06.28
 
-function [bestQueen] = GA(queen, drone, Vout, Vref, opts)
+function [bestQueen] = QBGA(queen, drone, Vout, Vref, opts)
 %GA is the genetic algorithm that finds the queen bee and
 % creates new bees by mating them with drones.  The new virgin
 % queens are then evaluated and the best is selected as the new
@@ -32,7 +32,7 @@ for i = 1:length(drone)
         end
         
         % Check if any genes mutate
-        if rand(1) <= queen.age/10
+        if rand(1) <= 1/15
             newQueen(1).(genes{j}) = mutateGene(queen, genes{j});
             newQueen(2).(genes{j}) = mutateGene(queen, genes{j});
         end
